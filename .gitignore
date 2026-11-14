@@ -1,0 +1,28 @@
+# configuração local (contém chaves de API e senhas)
+.env
+
+# dados gerados em tempo de execução
+data/
+.cache/
+
+# vídeos e legendas baixadas
+videos/
+filmes/
+series/
+*.mkv
+*.mp4
+*.avi
+
+# app Android: build e chave de assinatura (guarde o keystore fora do repositório)
+android/build/
+*.keystore
+*.jks
+
+# sistema / editores
+node_modules/
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.log
