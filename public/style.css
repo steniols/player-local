@@ -125,6 +125,7 @@ h2 { font-size: 1.25rem; font-weight: 600; margin: 2rem 0 1rem; color: var(--mut
 .pbtn.big svg { width: 2.4rem; height: 2.4rem; }
 .pbtn:hover { background: #ffffff1f; }
 .pbtn:focus { background: #fff; color: #000; outline: none; }
+.pbtn.on:not(:focus) { color: var(--accent); }
 
 .spin { position: absolute; left: 50%; top: 50%; width: 4rem; height: 4rem; margin: -2rem; border-radius: 50%; border: .35rem solid #ffffff30; border-top-color: var(--accent); animation: rot .9s linear infinite; display: none; pointer-events: none; }
 .player.loading .spin { display: block; }
@@ -165,6 +166,7 @@ h2 { font-size: 1.25rem; font-weight: 600; margin: 2rem 0 1rem; color: var(--mut
 .touch .nav:focus, .touch .nav:focus-visible { outline: none; }
 .touch .pbtn:hover, .touch .mi:hover { background: transparent; }
 .touch .pbtn:focus { background: transparent; color: #fff; }
+.touch .pbtn.on { color: var(--accent); }
 .touch .mi:focus { background: transparent; color: inherit; }
 .touch .mi:focus small { color: var(--muted); }
 .touch .mi:active, .touch .pbtn:active, .touch .ep-main:active { background: #ffffff26; }

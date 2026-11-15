@@ -826,9 +826,17 @@ async function stream(req, res, abs, t, audioIdx) {
   if (!v) return text(res, 415, 'Arquivo sem vídeo');
   const audios = pr.streams.filter(s => s.codec_type === 'audio');
   const a = audios.find(s => s.index === audioIdx) || audios.find(s => s.disposition?.default) || audios[0];
-  const args = ['-hide_banner', '-loglevel', 'error', '-nostdin', '-ss', t.toFixed(3), '-i', abs, '-map', `0:${v.index}`];
+  const copy = canCopyVideo(v);
+  const args = ['-hide_banner', '-loglevel', 'error', '-nostdin'];
+  // Vídeo copiado: t já é um keyframe (ver /api/seek). O ffmpeg recua ~0,13 s ao buscar em fontes com
+  // B-frames (MKV etc.) e cairia no keyframe ANTERIOR, enquanto o áudio seria cortado exatamente em t —
+  // dessincronizando áudio e vídeo. Buscamos um pouco depois do keyframe e sem corte preciso, para que
+  // os dois fluxos comecem juntos nele.
+  if (copy) { if (t > 0) args.push('-noaccurate_seek', '-ss', (t + 0.2).toFixed(3)); }
+  else args.push('-ss', t.toFixed(3));
+  args.push('-i', abs, '-map', `0:${v.index}`);
   if (a) args.push('-map', `0:${a.index}`);
-  if (canCopyVideo(v)) args.push('-c:v', 'copy');
+  if (copy) args.push('-c:v', 'copy');
   else args.push('-c:v', 'libx264', '-preset', 'veryfast', '-crf', '21', '-pix_fmt', 'yuv420p', '-vf', "scale='min(1920,iw)':-2");
   if (a) {
     if (a.codec_name === 'aac' && a.channels <= 2) args.push('-c:a', 'copy');

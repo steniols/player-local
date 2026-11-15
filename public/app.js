@@ -26,6 +26,7 @@ const ICON = {
   cc: '<svg viewBox="0 0 24 24"><path d="M19 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm-8 7H9.5v-.5h-2v3h2V13H11v1a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v1zm7 0h-1.5v-.5h-2v3h2V13H18v1a1 1 0 0 1-1 1h-3a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v1z"/></svg>',
   audio: '<svg viewBox="0 0 24 24"><path d="M12 3v9.28A4.39 4.39 0 0 0 10.5 12C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/></svg>',
   next: '<svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>',
+  shuffle: '<svg viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>',
   prev: '<svg viewBox="0 0 24 24"><path d="M18 6l-8.5 6 8.5 6V6zM6 6v12h2V6H6z"/></svg>',
   fs: '<svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>',
   rew: '<svg viewBox="0 0 24 24"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg>',
@@ -144,22 +145,36 @@ const thumbHtml = (src, letter, pct) => `
     ${pct != null ? `<div class="prog"><i style="width:${Math.min(100, Math.max(0, pct * 100)).toFixed(1)}%"></i></div>` : ''}
   </div>`;
 
-/* ------------------------------------------------------------ "Outros": fila aleatória */
-// Embaralha os vídeos de "Outros" e guarda a ordem na sessão, para o Próximo/Anterior do player seguir a
-// mesma sequência mostrada na tela inicial.
-function shuffleOutros(home) {
+/* ------------------------------------------------------------ "Outros": fila do Próximo/Anterior */
+// Guarda na sessão a ordem dos vídeos de "Outros" mostrada na tela inicial, para o Próximo/Anterior
+// do player seguir a mesma sequência.
+function outrosQueue(home) {
   const order = [];
-  for (const s of home.sections) if (s.flat) {
-    const t = s.titles;
-    for (let i = t.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [t[i], t[j]] = [t[j], t[i]]; }
-    for (const x of t) order.push({ id: x.firstVideo, label: x.name });
-  }
+  for (const s of home.sections) if (s.flat) for (const x of s.titles) order.push({ id: x.firstVideo, label: x.name });
   try { sessionStorage.setItem('outros', JSON.stringify(order)); } catch { /* */ }
   return order;
 }
 async function outrosOrder() {
   try { const o = JSON.parse(sessionStorage.getItem('outros') || 'null'); if (o) return o; } catch { /* */ }
-  return shuffleOutros(await api('/api/home'));
+  return outrosQueue(await api('/api/home'));
+}
+// Modo aleatório (botão no player): preferência lembrada no aparelho; a fila embaralhada fica na sessão
+// e é refeita ao ligar o modo, começando pelo vídeo atual.
+const shuffleOn = () => { try { return localStorage.getItem('outrosShuffle') === '1'; } catch { return false; } };
+function setShuffleOn(on) { try { localStorage.setItem('outrosShuffle', on ? '1' : '0'); } catch { /* */ } }
+function shuffledQueue(order, currentId, fresh = false) {
+  if (!fresh) {
+    try {
+      const q = JSON.parse(sessionStorage.getItem('outrosShuf') || 'null');
+      if (q && q.length === order.length && q.some(o => o.id === currentId)) return q;
+    } catch { /* */ }
+  }
+  const q = order.slice();
+  for (let i = q.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [q[i], q[j]] = [q[j], q[i]]; }
+  const k = q.findIndex(o => o.id === currentId);
+  if (k > 0) q.unshift(...q.splice(k, 1));
+  try { sessionStorage.setItem('outrosShuf', JSON.stringify(q)); } catch { /* */ }
+  return q;
 }
 
 /* ------------------------------------------------------------ início */
@@ -167,8 +182,7 @@ async function homeView() {
   setView({ back() {} });
   app.innerHTML = '<div class="loading">Carregando…</div>';
   const d = await api('/api/home');
-  // "Outros": ordem aleatória a cada vez que a tela inicial abre (Fisher-Yates)
-  shuffleOutros(d);
+  outrosQueue(d);
   app.innerHTML = `
     <div class="page">
       <div class="brand"><i></i>Player Local</div>
@@ -291,6 +305,7 @@ async function playerView(id) {
             <span class="sp"></span>
             <button class="pbtn nav" data-act="subs" id="bsubs">${ICON.cc}<span>Legendas</span></button>
             <button class="pbtn nav" data-act="audio" id="baudio" hidden>${ICON.audio}<span>Áudio</span></button>
+            <button class="pbtn nav" data-act="shuffle" id="bshuf" hidden aria-pressed="false">${ICON.shuffle}<span>Aleatório</span></button>
             <button class="pbtn nav" data-act="prev" id="bprev" hidden>${ICON.prev}<span>Anterior</span></button>
             <button class="pbtn nav" data-act="next" id="bnext" hidden>${ICON.next}<span>Próximo</span></button>
             <button class="pbtn nav" data-act="fs" aria-label="Tela cheia">${ICON.fs}</button>
@@ -542,6 +557,27 @@ async function playerView(id) {
     });
   }
 
+  // "Outros": anterior/próximo seguem a ordem da tela inicial ou a fila aleatória (ambas circulares)
+  function applyOutrosQueue(fresh = false) {
+    const info = S.info, order = S.outros || [];
+    const q = shuffleOn() ? shuffledQueue(order, info.id, fresh) : order;
+    const i = q.findIndex(o => o.id === info.id);
+    if (i >= 0 && q.length > 1) {
+      info.next = q[(i + 1) % q.length];
+      info.prev = q[(i - 1 + q.length) % q.length];
+    }
+    const b = $('#bshuf');
+    b.hidden = order.length < 3;
+    b.classList.toggle('on', shuffleOn());
+    b.setAttribute('aria-pressed', String(shuffleOn()));
+    $('#bnext').hidden = !info.next;
+    $('#bprev').hidden = !info.prev;
+  }
+  function toggleShuffle() {
+    setShuffleOn(!shuffleOn());
+    applyOutrosQueue(true);
+    toast(shuffleOn() ? 'Aleatório ligado' : 'Aleatório desligado');
+  }
   function goNext() {
     if (!S.info?.next) return;
     location.replace(`#/play/${S.info.next.id}`);
@@ -636,6 +672,7 @@ async function playerView(id) {
       case 'audio': audioMenu(); break;
       case 'next': goNext(); break;
       case 'prev': goPrev(); break;
+      case 'shuffle': toggleShuffle(); break;
       case 'fs': isFs() ? exitFs() : enterFs(); break;
     }
   });
@@ -713,14 +750,7 @@ async function playerView(id) {
   S.saveTimer = setInterval(() => { if (!video.paused && S.pending == null) save(); }, 10000);
 
   const info = await api(`/api/video/${id}`);
-  if (info.flat) { // "Outros": anterior/próximo seguem a fila aleatória (circular)
-    const order = await outrosOrder().catch(() => []);
-    const i = order.findIndex(o => o.id === info.id);
-    if (i >= 0 && order.length > 1) {
-      info.next = order[(i + 1) % order.length];
-      info.prev = order[(i - 1 + order.length) % order.length];
-    }
-  }
+  if (info.flat) S.outros = await outrosOrder().catch(() => []);
   if (destroyed) return;
   S.info = info;
   S.audio = info.audioSelected;
@@ -729,6 +759,7 @@ async function playerView(id) {
   document.title = `${info.single ? info.titleName : info.label} — Player Local`;
   $('#bnext').hidden = !info.next;
   $('#bprev').hidden = !info.prev;
+  if (info.flat) applyOutrosQueue();
   $('#baudio').hidden = info.audio.length < 2;
   $('#bsubs').hidden = !info.subtitle.list.length && !info.subSearch;
   renderBar(true);

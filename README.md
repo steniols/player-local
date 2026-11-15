@@ -78,7 +78,7 @@ SUBDL_API_KEY=sua_chave
 
 **Regras das categorias**
 - **Categorias normais:** cada subpasta vira uma série/coleção (com todos os vídeos dentro dela, inclusive em subpastas). Cada vídeo solto vira um filme. Pasta com um único vídeo abre direto no player.
-- **`OUTROS`:** todo vídeo da pasta e de qualquer subpasta aparece como item separado, sem agrupar e sem legendas. Essa seção aparece em ordem aleatória, e o player ganha os botões Anterior/Próximo seguindo essa ordem.
+- **`OUTROS`:** todo vídeo da pasta e de qualquer subpasta aparece como item separado, sem agrupar e sem legendas. Os vídeos aparecem em ordem alfabética, e o player ganha os botões Anterior/Próximo seguindo essa ordem.
 - Categorias sem nenhum vídeo não aparecem na tela inicial. Pastas inexistentes são ignoradas, com aviso no console.
 
 ## Organização das pastas
