@@ -757,6 +757,11 @@ async function playerView(id) {
       if (d === 'left' || d === 'right') { nudge(d === 'left' ? -10 : 10); return true; }
       if (k === 'Enter') { togglePlay(); return true; }
     }
+    // fim da linha de botões (ex.: Legendas) + → : vai para a barra de progresso
+    if (d === 'right') {
+      const row = $$('.btns .nav', ov).filter(visible);
+      if (row.length && document.activeElement === row[row.length - 1]) { bar.classList.add('kbd'); bar.focus({ preventScroll: true }); return true; }
+    }
     if (d) { navMove(d, pl); return true; } // controles + botão "Próximo episódio"
     if (k === ' ') { togglePlay(); return true; }
     if (isBack(e)) { if (!S.userPaused) hideOv(); else exit(); return true; }
