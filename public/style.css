@@ -33,6 +33,7 @@ h2 { font-size: 1.25rem; font-weight: 600; margin: 2rem 0 1rem; color: var(--mut
 /* cards */
 /* min-width: 0 impede que títulos longos (white-space: nowrap) alarguem os cards */
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(17rem, 100%), 1fr)); gap: 1.6rem; }
+.tv .grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1.4rem; }
 .row { display: flex; align-items: flex-start; gap: 1.6rem; overflow-x: auto; padding: 1rem; margin: -1rem; scrollbar-width: none; }
 .row::-webkit-scrollbar { display: none; }
 .card { display: block; min-width: 0; border-radius: var(--radius); transition: transform .15s ease; }
@@ -130,6 +131,12 @@ h2 { font-size: 1.25rem; font-weight: 600; margin: 2rem 0 1rem; color: var(--mut
 .spin { position: absolute; left: 50%; top: 50%; width: 4rem; height: 4rem; margin: -2rem; border-radius: 50%; border: .35rem solid #ffffff30; border-top-color: var(--accent); animation: rot .9s linear infinite; display: none; pointer-events: none; }
 .player.loading .spin { display: block; }
 @keyframes rot { to { transform: rotate(360deg); } }
+.nextep { position: absolute; right: 3rem; bottom: 3rem; z-index: 3; display: inline-flex; align-items: center; gap: .6rem; padding: .8rem 1.4rem; border: 0; border-radius: .5rem; background: #fff; color: #000; font: inherit; font-size: 1.15rem; font-weight: 700; cursor: pointer; box-shadow: 0 6px 24px #000a; animation: nextepIn .3s ease-out; transition: bottom .2s; }
+.nextep svg { width: 1.5rem; height: 1.5rem; fill: currentColor; }
+.nextep:hover { background: #e6e6e6; }
+.nextep:focus { outline: 3px solid var(--accent); outline-offset: 3px; }
+.player.ovshow .nextep { bottom: 10rem; }
+@keyframes nextepIn { from { opacity: 0; transform: translateY(.6rem); } }
 .toast { position: absolute; top: 2rem; left: 50%; transform: translateX(-50%); background: #000c; padding: .7rem 1.3rem; border-radius: 999px; font-size: 1.05rem; opacity: 0; transition: opacity .2s; pointer-events: none; white-space: nowrap; }
 .toast.show { opacity: 1; }
 .bigplay { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
@@ -172,6 +179,19 @@ h2 { font-size: 1.25rem; font-weight: 600; margin: 2rem 0 1rem; color: var(--mut
 .touch .mi:active, .touch .pbtn:active, .touch .ep-main:active { background: #ffffff26; }
 .touch .ep-main:focus { background: transparent; }
 .touch .bar .knob { transform: scale(1); }
+/* .mouse: PC com mouse — mantém o hover, mas sem destaque de foco até usar o teclado */
+.mouse .nav:focus, .mouse .nav:focus-visible, .mouse .btn:focus, .mouse .ep .ghost:focus { outline: none; }
+.mouse .card:focus:not(:hover) { transform: none; }
+.mouse .card:focus .thumb { box-shadow: none; }
+.mouse .pbtn:focus { background: transparent; color: #fff; }
+.mouse .pbtn:focus:hover { background: #ffffff1f; }
+.mouse .pbtn.on { color: var(--accent); }
+.mouse .mi:focus { background: transparent; color: inherit; }
+.mouse .mi:focus:hover { background: var(--panel2); }
+.mouse .mi:focus small { color: var(--muted); }
+.mouse .ep-main:focus:not(:hover) { background: transparent; }
+.mouse .bar:focus { height: .45rem; }
+.mouse .bar:focus .knob { box-shadow: none; }
 @media (max-width: 700px) {
   html { font-size: 15px; }
   .brand { margin-bottom: 1.2rem; font-size: 1.35rem; }
@@ -216,3 +236,9 @@ h2 { font-size: 1.25rem; font-weight: 600; margin: 2rem 0 1rem; color: var(--mut
 .seekflash.left { left: 8%; }
 .seekflash.right { right: 8%; }
 .seekflash.show { opacity: 1; }
+
+/* botão "Próximo episódio" em telas pequenas (celular em pé ou deitado) */
+@media (max-width: 700px), (max-height: 500px) {
+  .nextep { right: 1rem; bottom: 1.2rem; font-size: .95rem; padding: .6rem 1rem; }
+  .player.ovshow .nextep { bottom: 7.5rem; }
+}

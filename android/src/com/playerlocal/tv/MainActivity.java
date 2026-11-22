@@ -78,7 +78,8 @@ public class MainActivity extends Activity {
         s.setTextZoom(100);
         s.setSupportZoom(false);
         s.setAllowFileAccess(true);
-        s.setUserAgentString(s.getUserAgentString() + " PlayerLocalApp/1.0");
+        // "TV" no fim avisa a interface que é televisão (layout de 5 cards por linha)
+        s.setUserAgentString(s.getUserAgentString() + " PlayerLocalApp/1.2" + (isTv() ? " TV" : ""));
         web.addJavascriptInterface(new Bridge(), "PlayerLocalApp");
 
         web.setWebViewClient(new WebViewClient() {

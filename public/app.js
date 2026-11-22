@@ -37,6 +37,8 @@ const ICON = {
 // Dentro do app da TV a tela já é cheia; o botão Voltar do controle chega via window.__appBack().
 const IN_APP = /PlayerLocalApp/.test(navigator.userAgent);
 if (IN_APP) document.documentElement.classList.add('in-app');
+// TV: o app (v1.2+) marca o user agent com "TV"
+if (/PlayerLocalApp\/[\d.]+ TV\b/.test(navigator.userAgent)) document.documentElement.classList.add('tv');
 window.__appBack = () => {
   const atHome = (location.hash || '#/') === '#/' && !view?.isPlayer;
   if (atHome) return false; // deixa o app fechar
@@ -102,9 +104,23 @@ document.addEventListener('keydown', e => {
   else if (isBack(e)) { e.preventDefault(); view?.back?.(); }
 });
 document.addEventListener('mousedown', () => $$('.kbd').forEach(el => el.classList.remove('kbd')));
-// modo toque (celular): sem destaque de foco; volta ao modo controle ao usar teclas de navegação
-document.addEventListener('touchstart', () => document.documentElement.classList.add('touch'), { passive: true, capture: true });
-document.addEventListener('keydown', e => { if (DIRS[e.key] || e.key === 'Enter') document.documentElement.classList.remove('touch'); }, true);
+// Modo de entrada: o destaque de foco (borda amarela) só aparece para quem navega por controle/teclado.
+// .touch (celular) e .mouse (PC, e também o estado inicial em qualquer aparelho) escondem o foco;
+// usar setas/Enter/Tab volta ao modo controle. Fora do player, a 1ª seta só revela o item selecionado.
+const htmlCls = document.documentElement.classList;
+const inputMode = m => { htmlCls.toggle('touch', m === 'touch'); htmlCls.toggle('mouse', m === 'mouse'); };
+inputMode(matchMedia('(pointer: coarse)').matches ? 'touch' : 'mouse');
+document.addEventListener('touchstart', () => inputMode('touch'), { passive: true, capture: true });
+document.addEventListener('mousemove', e => { if ((e.movementX || e.movementY) && !htmlCls.contains('touch')) inputMode('mouse'); }, { passive: true, capture: true });
+document.addEventListener('keydown', e => {
+  if (!(DIRS[e.key] || e.key === 'Enter' || e.key === 'Tab')) return;
+  const hidden = htmlCls.contains('mouse') || htmlCls.contains('touch');
+  inputMode('keys');
+  if (hidden && DIRS[e.key] && !view?.isPlayer && document.activeElement?.closest?.('.nav')) {
+    e.preventDefault(); e.stopImmediatePropagation();
+    document.activeElement.classList.add('kbd');
+  }
+}, true);
 
 // lembra o item focado em cada página, para voltar ao mesmo lugar
 const focusKey = el => el.getAttribute('href') || el.dataset.key;
@@ -312,6 +328,7 @@ async function playerView(id) {
           </div>
         </div>
       </div>
+      <button class="nextep nav" id="bnextep" hidden>${ICON.next}<span>Próximo episódio</span></button>
       <div class="toast" id="toast"></div>
       <div class="menu" id="menu" hidden></div>
     </div>`;
@@ -454,6 +471,21 @@ async function playerView(id) {
     }
     if (html !== S.lastHtml) { S.lastHtml = html; subsEl.innerHTML = html ? `<span>${html}</span>` : ''; }
     renderBar();
+    updateNextEp();
+  }
+
+  /* ---- botão "Próximo episódio" durante os créditos (séries) */
+  const bnextep = $('#bnextep');
+  // capítulo de créditos quando o arquivo tem; senão, os últimos 5 min (no máximo 10% do episódio)
+  const creditsAt = () => S.info.creditsAt ?? dur() - Math.min(300, dur() * 0.1);
+  function updateNextEp() {
+    const D = dur(), t = absTime();
+    const on = !!(S.info?.next && !S.info.flat && D && S.loaded && menu.hidden && t >= creditsAt() && t < D - 1);
+    if (on === !bnextep.hidden) return;
+    bnextep.hidden = !on;
+    // controle remoto: já deixa o botão selecionado para bastar apertar OK
+    if (on && !ovVisible()) bnextep.focus({ preventScroll: true });
+    else if (!on && document.activeElement === bnextep) bplay.focus({ preventScroll: true });
   }
 
   /* ---- menus e diálogos */
@@ -637,6 +669,7 @@ async function playerView(id) {
   }
   pl.addEventListener('click', e => {
     if (!menu.hidden) { if (e.target === menu && S.menuKind === 'menu') closeMenu(); return; }
+    if (e.target.closest('#bnextep')) { goNext(); return; }
     enterFs();
     const onVideo = !e.target.closest('[data-act], .bar, .ov-top, .ov-bottom');
     if (isTouch() && onVideo) {
@@ -658,7 +691,8 @@ async function playerView(id) {
         return;
       }
     }
-    if (!ovVisible()) { showOv(false); return; }
+    if (!ovVisible()) {
+      if (k === 'Enter' && !bnextep.hidden && document.activeElement === bnextep) { goNext(); return true; } showOv(false); return; }
     if (e.target.closest('#ovmid')) { togglePlay(); return; }
     const b = e.target.closest('[data-act]');
     if (!b) return;
@@ -715,7 +749,7 @@ async function playerView(id) {
       if (d === 'left' || d === 'right') { nudge(d === 'left' ? -10 : 10); return true; }
       if (k === 'Enter') { togglePlay(); return true; }
     }
-    if (d) { navMove(d, ov); return true; }
+    if (d) { navMove(d, pl); return true; } // controles + botão "Próximo episódio"
     if (k === ' ') { togglePlay(); return true; }
     if (isBack(e)) { if (!video.paused) hideOv(); else exit(); return true; }
     return false;

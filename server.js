@@ -261,10 +261,11 @@ async function probe(abs) {
   if (!probeCache.has(k)) {
     const pr = probeLimit(() => run(FFPROBE, ['-v', 'error',
       '-show_entries', 'format=duration:stream=index,codec_type,codec_name,pix_fmt,channels:stream_tags:stream_disposition=default,forced,attached_pic',
-      '-of', 'json', abs], { timeout: 60000 })).then(o => {
+      '-show_chapters', '-of', 'json', abs], { timeout: 60000 })).then(o => {
       const j = JSON.parse(o);
       j.duration = parseFloat(j.format?.duration) || 0;
       j.streams = j.streams || [];
+      j.chapters = (j.chapters || []).map(c => ({ start: parseFloat(c.start_time) || 0, title: c.tags?.title || '' }));
       return j;
     });
     pr.catch(() => probeCache.delete(k));
@@ -687,6 +688,18 @@ function audioTracks(pr) {
   });
 }
 
+// Início dos créditos, a partir dos capítulos do arquivo: um capítulo chamado "créditos"/"credits"/"ending"
+// na metade final, ou o último capítulo quando ele é curto (até 10 min / 15% do vídeo). Sem capítulos → null
+// (o player usa os últimos minutos como estimativa).
+function creditsStart(pr) {
+  const D = pr.duration, ch = pr.chapters || [];
+  if (!D || ch.length < 2) return null;
+  const named = ch.find(c => c.start > D * 0.5 && /cr[eé]dit|ending|end ?roll|outro|encerramento/i.test(c.title));
+  if (named) return named.start;
+  const last = ch[ch.length - 1], left = D - last.start;
+  return left >= 20 && left <= Math.min(600, D * 0.15) ? last.start : null;
+}
+
 async function videoInfo(abs) {
   const { pr, title, subs, vrel, trel } = await videoContext(abs);
   const i = title.videos.indexOf(abs);
@@ -705,7 +718,7 @@ async function videoInfo(abs) {
   return {
     id: encId(vrel), titleId: title.id, titleName: title.name, single: title.videos.length === 1, flat: title.flat,
     subSearch: !title.flat, subSearchReady: !!(OS_KEY || SD_KEY),
-    ...meta, duration: pr.duration,
+    ...meta, duration: pr.duration, creditsAt: title.flat ? null : creditsStart(pr),
     audio, audioSelected,
     subtitle: { list: subs.map(pub), selected: pick.selected, choices: pick.choices.map(pub) },
     progress: prog.position != null ? { position: prog.position, finished: !!prog.finished } : null,

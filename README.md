@@ -116,7 +116,8 @@ filmes/
 
 ## Recursos do player
 - **Progresso** salvo no servidor (`data/state.json`) a cada 10s, ao pausar e ao sair. Vale para qualquer aparelho, e ao reabrir o player pergunta se quer continuar de onde parou. Acima de 92% o vídeo conta como assistido, e a seção "Continuar assistindo" sugere o próximo episódio.
-- **Próximo episódio** com contagem de 10s ao terminar. Os botões Anterior/Próximo aparecem em séries e em "Outros".
+- **Próximo episódio:** em séries, um botão "Próximo episódio" aparece durante os créditos (pelo capítulo de créditos do arquivo, quando existe; senão nos últimos 5 minutos). Ao terminar, há uma contagem de 10s. Os botões Anterior/Próximo aparecem em séries e em "Outros".
+- **Aleatório** (só em "Outros"): faz Anterior/Próximo seguirem uma ordem embaralhada. A escolha fica lembrada no aparelho.
 - **Faixas de áudio:** escolha entre as faixas do arquivo. A escolha fica salva por vídeo.
 - **Tela cheia** automática no navegador, que só permite isso depois de um clique ou tecla.
 
@@ -137,7 +138,7 @@ filmes/
 
 ## App para Android TV e celular
 Em `android/` há um app leve que abre o Player Local em tela cheia, com ícone na tela inicial. O mesmo APK serve para TV e celular:
-- **Na TV,** a tela fica sempre deitada e o botão Voltar do controle funciona em todas as telas. A tecla **Menu** abre a tela para digitar o endereço do servidor.
+- **Na TV,** a tela inicial mostra 5 títulos por linha, a tela fica sempre deitada e o botão Voltar do controle funciona em todas as telas. A tecla **Menu** abre a tela para digitar o endereço do servidor.
 - **No celular,** a navegação segue a posição do aparelho. Ao abrir um vídeo, a tela gira para deitado e as barras do sistema somem.
 - **O app encontra o PC sozinho:** primeiro tenta o último endereço usado, depois um broadcast UDP na porta 8765 e, por fim, uma varredura da rede local.
 - **As telas vêm do servidor.** Mudanças em `public/` aparecem nos aparelhos sem reinstalar o app.

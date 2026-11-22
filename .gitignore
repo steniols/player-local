@@ -9,6 +9,7 @@ data/
 videos/
 filmes/
 series/
+documentarios/
 *.mkv
 *.mp4
 *.avi
