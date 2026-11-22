@@ -83,7 +83,10 @@ function navMove(dir, scope = document) {
     const dx = b.left + b.width / 2 - cx, dy = b.top + b.height / 2 - cy;
     const [main, cross] = dir === 'right' ? [dx, dy] : dir === 'left' ? [-dx, dy] : dir === 'down' ? [dy, dx] : [-dy, dx];
     if (main <= 1) continue;
-    const score = main + Math.abs(cross) * 2.5;
+    // prioriza itens na mesma linha (←/→) ou coluna (↑/↓): ex. de "10s" para "Legendas" e não para a barra
+    const horiz = dir === 'left' || dir === 'right';
+    const aligned = horiz ? b.top < r.bottom && b.bottom > r.top : b.left < r.right && b.right > r.left;
+    const score = (aligned ? 0 : 1e6) + main + Math.abs(cross) * 2.5;
     if (score < bestScore) { bestScore = score; best = el; }
   }
   if (best) {
@@ -294,7 +297,7 @@ async function playerView(id) {
     info: null, offset: 0, pending: null, seekSeq: 0, loaded: false,
     cues: [], subKey: 'off', subDelay: 0, audio: null,
     hideTimer: 0, saveTimer: 0, raf: 0, toastTimer: 0, cdTimer: 0,
-    menuKind: null, dialogResolve: null, recover: 0, lastHtml: '', lastSec: -1,
+    menuKind: null, dialogResolve: null, userPaused: false, recover: 0, lastHtml: '', lastSec: -1,
   };
 
   app.innerHTML = `
@@ -355,18 +358,23 @@ async function playerView(id) {
     pl.classList.remove('idle');
     if (focus && !ov.contains(document.activeElement) && menu.hidden) bplay.focus({ preventScroll: true });
     clearTimeout(S.hideTimer);
-    S.hideTimer = setTimeout(() => { if (!video.paused && menu.hidden) hideOv(); }, 4000);
+    // some se o usuário não pausou (durante o carregamento após avançar, o vídeo fica "pausado" por instantes)
+    S.hideTimer = setTimeout(() => { if (!S.userPaused && menu.hidden) hideOv(); }, 4000);
   }
   function hideOv() {
     clearTimeout(S.hideTimer);
     pl.classList.remove('ovshow');
     pl.classList.add('idle');
+    // ao reaparecer, os controles voltam com o Play selecionado (não a barra de progresso),
+    // para as setas laterais andarem entre os botões (Legendas, Áudio…)
+    if (ov.contains(document.activeElement)) bplay.focus({ preventScroll: true });
   }
 
   /* ---- reprodução / busca */
   function togglePlay() {
     if (!S.loaded) return;
-    if (video.paused) video.play().catch(() => {}); else video.pause();
+    if (video.paused) { S.userPaused = false; video.play().catch(() => {}); }
+    else { S.userPaused = true; video.pause(); }
   }
 
   const inBuffered = rel => {
@@ -395,7 +403,7 @@ async function playerView(id) {
       S.loaded = true;
       video.src = `/api/stream/${id}?t=${start}${S.audio != null ? `&a=${S.audio}` : ''}`;
       try { await video.play(); }
-      catch (err) { if (err.name === 'NotAllowedError') { pl.classList.remove('loading'); showOv(); toast('Pressione OK para reproduzir'); } }
+      catch (err) { if (err.name === 'NotAllowedError') { S.userPaused = true; pl.classList.remove('loading'); showOv(); toast('Pressione OK para reproduzir'); } }
     } catch (err) {
       if (seq === S.seekSeq) { S.pending = null; toast('Erro ao carregar: ' + err.message, 5000); }
     }
@@ -721,8 +729,8 @@ async function playerView(id) {
     const k = e.key, kc = e.keyCode, d = DIRS[k];
     if (k !== 'Escape' && !isFs() && S.menuKind !== 'dialog') enterFs();
     if (k === 'MediaPlayPause' || kc === 10252 || kc === 179) { togglePlay(); return true; }
-    if (k === 'MediaPlay' || kc === 415) { video.play().catch(() => {}); return true; }
-    if (k === 'MediaPause' || kc === 19) { video.pause(); return true; }
+    if (k === 'MediaPlay' || kc === 415) { S.userPaused = false; video.play().catch(() => {}); return true; }
+    if (k === 'MediaPause' || kc === 19) { S.userPaused = true; video.pause(); return true; }
     if (k === 'MediaFastForward' || kc === 417) { nudge(30); return true; }
     if (k === 'MediaRewind' || kc === 412) { nudge(-30); return true; }
     if (k === 'MediaTrackNext' && S.info?.next) { goNext(); return true; }
@@ -751,7 +759,7 @@ async function playerView(id) {
     }
     if (d) { navMove(d, pl); return true; } // controles + botão "Próximo episódio"
     if (k === ' ') { togglePlay(); return true; }
-    if (isBack(e)) { if (!video.paused) hideOv(); else exit(); return true; }
+    if (isBack(e)) { if (!S.userPaused) hideOv(); else exit(); return true; }
     return false;
   };
 

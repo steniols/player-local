@@ -20,7 +20,9 @@ body {
 a { color: inherit; text-decoration: none; }
 button { font: inherit; color: inherit; cursor: pointer; }
 .nav:focus { outline: none; }
-.nav:focus-visible, .nav.kbd:focus { outline: 3px solid var(--accent); outline-offset: 3px; }
+/* destaque de foco (controle/teclado): branco, discreto */
+.nav:focus-visible, .nav.kbd:focus { outline: 3px solid #fff; outline-offset: 3px; }
+.card.nav:focus-visible, .card.nav.kbd:focus, .bar.nav:focus-visible, .bar.nav.kbd:focus { outline: none; }
 
 .page { padding: 2.5rem 3.5rem 4rem; }
 @media (max-width: 700px) { .page { padding: 1.25rem 16px 3rem; } }
@@ -45,7 +47,7 @@ h2 { font-size: 1.25rem; font-weight: 600; margin: 2rem 0 1rem; color: var(--mut
 }
 .thumb::before { content: attr(data-l); position: absolute; inset: 0; display: grid; place-items: center; font-size: 3rem; font-weight: 700; color: #ffffff30; }
 .thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.card:focus .thumb { box-shadow: 0 0 0 3px var(--accent), 0 10px 30px #000a; }
+.card:focus .thumb { box-shadow: 0 0 0 3px #fff, 0 10px 30px #000a; }
 .prog { position: absolute; left: 0; right: 0; bottom: 0; height: .3rem; background: #ffffff30; }
 .prog i { display: block; height: 100%; background: var(--accent); }
 .meta { padding: .7rem .2rem 0; display: flex; flex-direction: column; gap: .2rem; }
@@ -80,7 +82,7 @@ h2 { font-size: 1.25rem; font-weight: 600; margin: 2rem 0 1rem; color: var(--mut
 .ep-main .txt span { color: var(--muted); }
 .ep .ghost { background: transparent; border: 1px solid #ffffff26; border-radius: 999px; padding: .5rem 1rem; color: var(--muted); white-space: nowrap; }
 .ep .ghost.on { color: var(--accent); border-color: currentColor; }
-.ep .ghost:focus { outline: 3px solid var(--accent); color: var(--text); }
+.ep .ghost:focus { outline: 3px solid #fff; color: var(--text); }
 @media (max-width: 700px) { .ep-main .thumb { flex-basis: 8.5rem; } .ep .ghost { display: none; } }
 
 /* player */
@@ -106,6 +108,12 @@ h2 { font-size: 1.25rem; font-weight: 600; margin: 2rem 0 1rem; color: var(--mut
 .ptitle span { color: #cfd5e0; }
 .ov-mid { flex: 1; }
 .ov-bottom { padding: 0 3rem 2.2rem; }
+/* TV: margem de segurança, pois muitas TVs cortam as bordas da imagem (overscan) */
+.tv .page { padding: 2.5rem 5% 4rem; }
+.tv .ov-top { padding: 2.5rem 5% 0; }
+.tv .ov-bottom { padding: 0 5% 3rem; }
+.tv .nextep { right: 5%; bottom: 3.5rem; }
+.tv .player.ovshow .nextep { bottom: 11rem; }
 @media (max-width: 700px) { .ov-top { padding: 1rem 16px 0; } .ov-bottom { padding: 0 16px 1rem; } }
 .bar { position: relative; height: .45rem; border-radius: 999px; background: #ffffff33; cursor: pointer; margin: 1rem 0 .6rem; transition: height .15s; }
 .bar::before { content: ''; position: absolute; left: 0; right: 0; top: -.8rem; bottom: -.8rem; }
@@ -114,7 +122,7 @@ h2 { font-size: 1.25rem; font-weight: 600; margin: 2rem 0 1rem; color: var(--mut
 .bar .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: inherit; background: var(--accent); }
 .bar .knob { position: absolute; top: 50%; width: 1.1rem; height: 1.1rem; margin: -.55rem 0 0 -.55rem; border-radius: 50%; background: #fff; box-shadow: 0 0 6px #000a; transform: scale(0); transition: transform .15s; }
 .bar:focus .knob, .bar:hover .knob { transform: scale(1); }
-.bar:focus .knob { box-shadow: 0 0 0 4px var(--accent); }
+.bar:focus .knob { transform: scale(1.35); box-shadow: 0 0 0 4px #ffffff55, 0 0 10px #000a; }
 .times { display: flex; justify-content: space-between; color: #dfe4ee; font-variant-numeric: tabular-nums; font-size: 1rem; }
 .btns { display: flex; align-items: center; gap: .5rem; margin-top: .8rem; flex-wrap: wrap; }
 .btns .sp { flex: 1; }
@@ -134,7 +142,7 @@ h2 { font-size: 1.25rem; font-weight: 600; margin: 2rem 0 1rem; color: var(--mut
 .nextep { position: absolute; right: 3rem; bottom: 3rem; z-index: 3; display: inline-flex; align-items: center; gap: .6rem; padding: .8rem 1.4rem; border: 0; border-radius: .5rem; background: #fff; color: #000; font: inherit; font-size: 1.15rem; font-weight: 700; cursor: pointer; box-shadow: 0 6px 24px #000a; animation: nextepIn .3s ease-out; transition: bottom .2s; }
 .nextep svg { width: 1.5rem; height: 1.5rem; fill: currentColor; }
 .nextep:hover { background: #e6e6e6; }
-.nextep:focus { outline: 3px solid var(--accent); outline-offset: 3px; }
+.nextep:focus { outline: 3px solid #fff; outline-offset: 3px; }
 .player.ovshow .nextep { bottom: 10rem; }
 @keyframes nextepIn { from { opacity: 0; transform: translateY(.6rem); } }
 .toast { position: absolute; top: 2rem; left: 50%; transform: translateX(-50%); background: #000c; padding: .7rem 1.3rem; border-radius: 999px; font-size: 1.05rem; opacity: 0; transition: opacity .2s; pointer-events: none; white-space: nowrap; }
