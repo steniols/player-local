@@ -118,6 +118,7 @@ filmes/
 - **Progresso** salvo no servidor (`data/state.json`) a cada 10s, ao pausar e ao sair. Vale para qualquer aparelho, e ao reabrir o player pergunta se quer continuar de onde parou. Acima de 92% o vídeo conta como assistido, e a seção "Continuar assistindo" sugere o próximo episódio.
 - **Próximo episódio:** em séries, um botão "Próximo episódio" aparece durante os créditos (pelo capítulo de créditos do arquivo, quando existe; senão nos últimos 5 minutos). Ao terminar, há uma contagem de 10s. Os botões Anterior/Próximo aparecem em séries e em "Outros".
 - **Aleatório** (só em "Outros"): faz Anterior/Próximo seguirem uma ordem embaralhada. A escolha fica lembrada no aparelho.
+- **Volume** (PC e celular): botão de silenciar e controle deslizante; tecla **M** silencia. O nível fica lembrado no aparelho. Na TV, use o volume do controle remoto.
 - **Faixas de áudio:** escolha entre as faixas do arquivo. A escolha fica salva por vídeo.
 - **Tela cheia** automática no navegador, que só permite isso depois de um clique ou tecla.
 

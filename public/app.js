@@ -24,6 +24,9 @@ const ICON = {
   pause: '<svg viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>',
   back: '<svg viewBox="0 0 24 24"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20z"/></svg>',
   cc: '<svg viewBox="0 0 24 24"><path d="M19 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm-8 7H9.5v-.5h-2v3h2V13H11v1a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v1zm7 0h-1.5v-.5h-2v3h2V13H18v1a1 1 0 0 1-1 1h-3a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v1z"/></svg>',
+  vol: '<svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05A4.47 4.47 0 0 0 16.5 12zM14 3.23v2.06a7 7 0 0 1 0 13.42v2.06A9 9 0 0 0 14 3.23z"/></svg>',
+  volLow: '<svg viewBox="0 0 24 24"><path d="M5 9v6h4l5 5V4L9 9H5zm13.5 3A4.5 4.5 0 0 0 16 7.97v8.05A4.47 4.47 0 0 0 18.5 12z"/></svg>',
+  mute: '<svg viewBox="0 0 24 24"><path d="M16.5 12A4.5 4.5 0 0 0 14 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.8 8.8 0 0 0 21 12a9 9 0 0 0-7-8.77v2.06A7 7 0 0 1 19 12zM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a9 9 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4 9.91 6.09 12 8.18V4z"/></svg>',
   audio: '<svg viewBox="0 0 24 24"><path d="M12 3v9.28A4.39 4.39 0 0 0 10.5 12C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/></svg>',
   next: '<svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>',
   shuffle: '<svg viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>',
@@ -321,6 +324,10 @@ async function playerView(id) {
             <button class="pbtn nav" data-act="rew" aria-label="Voltar 10 segundos">${ICON.rew}<span>10s</span></button>
             <button class="pbtn big nav" data-act="play" id="bplay" aria-label="Reproduzir/Pausar">${ICON.play}</button>
             <button class="pbtn nav" data-act="fwd" aria-label="Avançar 10 segundos"><span>10s</span>${ICON.fwd}</button>
+            <div class="vol" id="volbox">
+              <button class="pbtn" data-act="mute" id="bmute" aria-label="Silenciar">${ICON.vol}</button>
+              <input type="range" id="vol" min="0" max="1" step="0.05" aria-label="Volume">
+            </div>
             <span class="sp"></span>
             <button class="pbtn nav" data-act="subs" id="bsubs">${ICON.cc}<span>Legendas</span></button>
             <button class="pbtn nav" data-act="audio" id="baudio" hidden>${ICON.audio}<span>Áudio</span></button>
@@ -716,6 +723,7 @@ async function playerView(id) {
       case 'prev': goPrev(); break;
       case 'shuffle': toggleShuffle(); break;
       case 'fs': isFs() ? exitFs() : enterFs(); break;
+      case 'mute': setVolume(video.volume || S.lastVol || 1, !video.muted); break;
     }
   });
   $('#ovmid').addEventListener('dblclick', () => { if (!isTouch()) isFs() ? exitFs() : enterFs(); });
@@ -750,6 +758,7 @@ async function playerView(id) {
       if (d) { showOv(); return true; }
       if (isBack(e)) { exit(); return true; }
       if (k === 'f') { isFs() ? exitFs() : enterFs(); return true; }
+      if (k === 'm') { setVolume(video.volume || S.lastVol || 1, !video.muted); showOv(false); return true; }
       return false;
     }
     showOv(false);
@@ -791,6 +800,27 @@ async function playerView(id) {
       video.load();
     },
   });
+
+  /* ---- volume (PC e celular; na TV o volume é o do controle) */
+  const volEl = $('#vol'), bmute = $('#bmute');
+  function setVolume(v, muted = false) {
+    v = Math.max(0, Math.min(1, +v || 0));
+    if (v > 0) S.lastVol = v;
+    video.volume = v;
+    video.muted = muted || v === 0;
+    const shown = video.muted ? 0 : v;
+    volEl.value = shown;
+    volEl.style.setProperty('--p', shown * 100 + '%');
+    bmute.innerHTML = shown === 0 ? ICON.mute : shown < 0.5 ? ICON.volLow : ICON.vol;
+    bmute.setAttribute('aria-label', video.muted ? 'Ativar som' : 'Silenciar');
+    try { localStorage.setItem('volume', JSON.stringify({ v: S.lastVol ?? v, m: video.muted })); } catch { /* */ }
+  }
+  volEl.addEventListener('input', () => { setVolume(volEl.value); showOv(false); });
+  {
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem('volume') || 'null'); } catch { /* */ }
+    setVolume(saved?.v ?? 1, !!saved?.m);
+  }
 
   /* ---- inicialização */
   S.raf = requestAnimationFrame(tick);

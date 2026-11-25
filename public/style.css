@@ -126,6 +126,16 @@ h2 { font-size: 1.25rem; font-weight: 600; margin: 2rem 0 1rem; color: var(--mut
 .times { display: flex; justify-content: space-between; color: #dfe4ee; font-variant-numeric: tabular-nums; font-size: 1rem; }
 .btns { display: flex; align-items: center; gap: .5rem; margin-top: .8rem; flex-wrap: wrap; }
 .btns .sp { flex: 1; }
+/* volume: botão + controle deslizante (escondido na TV, que usa o volume do controle remoto) */
+.vol { display: inline-flex; align-items: center; gap: .2rem; margin-left: .3rem; }
+.tv .vol { display: none; }
+.vol input {
+  --p: 100%; -webkit-appearance: none; appearance: none; width: 6.5rem; height: .3rem; border-radius: 999px; cursor: pointer;
+  background: linear-gradient(to right, #fff var(--p), #ffffff40 var(--p)); outline: none;
+}
+.vol input::-webkit-slider-thumb { -webkit-appearance: none; width: .95rem; height: .95rem; border-radius: 50%; background: #fff; border: 0; box-shadow: 0 0 4px #000a; }
+.vol input::-moz-range-thumb { width: .95rem; height: .95rem; border-radius: 50%; background: #fff; border: 0; }
+.vol input:focus-visible { box-shadow: 0 0 0 3px #ffffff55; }
 .pbtn {
   display: inline-flex; align-items: center; gap: .45rem; border: 0; border-radius: 999px;
   background: transparent; padding: .6rem .9rem; font-size: 1.05rem; font-weight: 600; color: #fff;
@@ -223,6 +233,8 @@ h2 { font-size: 1.25rem; font-weight: 600; margin: 2rem 0 1rem; color: var(--mut
   .pbtn span { display: none; }
   .pbtn svg { width: 1.6rem; height: 1.6rem; }
   .pbtn.big svg { width: 2.2rem; height: 2.2rem; }
+  .vol { margin-left: 0; }
+  .vol input { width: 4.5rem; }
   .subs span { font-size: max(15px, min(5.4vh, 3.1vw)); }
   .toast { white-space: normal; text-align: center; width: max-content; max-width: calc(100% - 32px); top: 1rem; }
   .panel { padding: 1.1rem; max-height: calc(100% - 32px); }
